@@ -11,7 +11,7 @@ const app = new Hono()
     )
     .post('/goat', (c) => {
         fetch('https://svenlaa.goatcounter.com?' + c.req.url.split('?')[1]);
-        return c.body(null, 204);
+        return c.body(null, 402);
     });
 
 app.route('/logiverse', logiverse);
