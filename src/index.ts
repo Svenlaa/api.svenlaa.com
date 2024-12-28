@@ -8,11 +8,7 @@ const app = new Hono()
         c.html(
             '<meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="stylesheet" href="https://svenlaa.com/style.css" /><title>api.svenlaa.com</title><h1><a style="--color:var(--stone-950);text-decoration:none" href="https://github.com/Svenlaa/api.svenlaa.com">api.svenlaa.com</a></h1>Why are you here? Visit <a href="https://svenlaa.com">svenlaa.com</a> for the site'
         )
-    )
-    .get('/goat', (c) => {
-        fetch('https://svenlaa.goatcounter.com?' + c.req.url.split('?')[1]);
-        return c.body(null, 402);
-    });
+    );
 
 app.route('/logiverse', logiverse);
 
