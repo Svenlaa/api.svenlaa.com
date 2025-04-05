@@ -6,11 +6,11 @@
     },
     "dependencies": {
         "bcryptjs": "^2.4.3",
-        "hono": "^4.6.14"
+        "hono": "^4.7.5"
     },
     "devDependencies": {
-        "@cloudflare/workers-types": "^4.20241218.0",
+        "@cloudflare/workers-types": "^4.20250405.0",
         "@types/bcryptjs": "^2.4.6",
-        "wrangler": "^3.96.0"
+        "wrangler": "^3.114.4"
     }
 }
