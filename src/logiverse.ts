@@ -20,18 +20,21 @@ const app = new Hono<{ Bindings: Bindings }>()
         const likeDids = res.likes.map((like: any) => like.actor.did as string) as string[];
 
         const atPromises = likeDids.map(async (did) => {
-            const url = `https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed?actor=${encodeURIComponent(
-                did
-            )}&filter=posts_no_replies&includePins=false&limit=1`;
+            const encodedDid = encodeURIComponent(did);
+            const url = `https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed?actor=${encodedDid}&filter=posts_no_replies&includePins=false&limit=10`;
 
             const req = await fetch(url);
+            if (!req.ok) return null;
             const res = (await req.json()) as any;
-            console.log({ url, res });
-            const p = res.feed[0].post;
+            if (!res) return null;
+            const feedWithoutReposts = res.feed.filter((p) => !p.reason);
+            if (!feedWithoutReposts.length) return null;
+            const p = feedWithoutReposts[0].post;
+            if (!p) return null;
 
             return {
                 status: p.record.text,
-                username: 'at://' + (p.author?.handle ?? p.author?.did ?? 'invalid an unknown'),
+                username: 'at://' + (p.author?.handle ?? p.author?.did ?? 'invalid|unknown'),
                 last_updated: p.record.createdAt.substr(0, 19).replace('T', ' '),
                 gif: null,
                 banned: 0,
@@ -39,7 +42,7 @@ const app = new Hono<{ Bindings: Bindings }>()
         });
         const atPosts = await Promise.all(atPromises);
 
-        const allposts = users.concat(atPosts);
+        const allposts = users.concat(atPosts.filter((p) => p !== null));
 
         return c.json(
             allposts.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)).map((user) => Object.values(user))
