@@ -108,6 +108,14 @@ const app = new Hono<{ Bindings: Bindings }>()
             if (username.toLowerCase().includes(ADMIN_NAME.toLowerCase()))
                 return c.json({ error: 'no admin impersonation' }, 400);
 
+            if (username.startsWith('at://'))
+                return c.json(
+                    {
+                        error: 'connect your atproto account by liking this post https://bsky.app/profile/did:plc:rks3gyeobrz5wwjonxgaijxw/post/3mbjpo7qghs2j',
+                    },
+                    400
+                );
+
             const hashedPassword = await bcrypt.hash(password, 10);
 
             const { results: newUsers } = await c.env.db
