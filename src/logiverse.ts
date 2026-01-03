@@ -12,7 +12,38 @@ const app = new Hono<{ Bindings: Bindings }>()
         const { results: users } = await c.env.db
             .prepare('SELECT status, username, last_updated, gif, banned FROM `logiverse_users` WHERE banned = 0')
             .run();
-        return c.json(users.map((user) => Object.values(user)));
+
+        const originalPost =
+            'https://public.api.bsky.app/xrpc/app.bsky.feed.getLikes?uri=at%3A%2F%2Fdid%3Aplc%3Arks3gyeobrz5wwjonxgaijxw%2Fapp.bsky.feed.post%2F3mbjpo7qghs2j&limit=30';
+        const req = await fetch(originalPost);
+        const res = (await req.json()) as any;
+        const likeDids = res.likes.map((like: any) => like.actor.did as string) as string[];
+
+        const atPromises = likeDids.map(async (did) => {
+            const url = `https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed?actor=${encodeURIComponent(
+                did
+            )}&filter=posts_no_replies&includePins=false&limit=1`;
+
+            const req = await fetch(url);
+            const res = (await req.json()) as any;
+            console.log({ url, res });
+            const p = res.feed[0].post;
+
+            return {
+                status: p.record.text,
+                username: 'at://' + (p.author?.handle ?? p.author?.did ?? 'invalid an unknown'),
+                last_updated: p.record.createdAt.substr(0, 19).replace('T', ' '),
+                gif: null,
+                banned: 0,
+            };
+        });
+        const atPosts = await Promise.all(atPromises);
+
+        const allposts = users.concat(atPosts);
+
+        return c.json(
+            allposts.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)).map((user) => Object.values(user))
+        );
     })
     .post('/update', async (c) => {
         const body = await c.req.json();
